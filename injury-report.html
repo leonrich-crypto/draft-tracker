@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Draft Tracker · Injury Report</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="scoreboard">
+  <div class="scoreboard-inner">
+    <div class="scoreboard-top">
+      <div class="wordmark"><i class="fas fa-football" style="color:var(--amber)"></i> Draft Tracker <span class="down">Live Board</span></div>
+      <nav class="nav">
+        <a href="index.html"><i class="fas fa-list"></i>All Players</a>
+        <a href="by-position.html"><i class="fas fa-layer-group"></i>By Position</a>
+        <a href="injury-report.html" class="active"><i class="fas fa-notes-medical"></i>Injuries</a>
+        <a href="sleepers.html"><i class="fas fa-star"></i>Sleepers</a>
+      </nav>
+    </div>
+    <div class="page-title">Injured players and their handcuffs</div>
+  </div>
+  <div class="scoreboard-ticks"></div>
+</header>
+
+<div class="app">
+  <div id="injuriesGrid" class="card-grid"></div>
+</div>
+
+<script src="data.js"></script>
+<script src="store.js"></script>
+<script>
+const grid = document.getElementById('injuriesGrid');
+
+function statusChip(severity, status) {
+  const cls = severity === 'out' ? 'chip-flag' : severity === 'questionable' ? 'chip-amber' : 'chip-ok';
+  return `<span class="chip ${cls}"><i class="fas fa-exclamation-triangle"></i> ${status}</span>`;
+}
+
+function render() {
+  const drafted = getDraftedSet();
+
+  grid.innerHTML = INJURIES.map(inj => {
+    const injuredIsRanked = findPlayerByName(inj.player);
+    const injuredDrafted = injuredIsRanked ? drafted.has(inj.player) : false;
+
+    const handcuffPlayer = findPlayerByName(inj.handcuff);
+    const handcuffDrafted = handcuffPlayer ? drafted.has(inj.handcuff) : false;
+
+    const stamp = injuredDrafted ? '<div class="stamp">On your team</div>' : '';
+
+    const handcuffToggle = handcuffPlayer ? `
+      <div class="draft-toggle">
+        <label>
+          <input type="checkbox" class="draft-check" data-name="${inj.handcuff.replace(/"/g,'&quot;')}" ${handcuffDrafted ? 'checked' : ''} />
+          Mark ${inj.handcuff} drafted
+        </label>
+      </div>
+    ` : `
+      <div class="draft-toggle">
+        <span style="font-size:0.8rem;color:var(--ink-soft);"><i class="fas fa-circle-info"></i> ${inj.handcuff} isn't on the ranked board yet</span>
+      </div>
+    `;
+
+    return `
+      <div class="card card-flag ${injuredDrafted ? 'is-drafted' : ''}">
+        ${stamp}
+        <h3><span class="pos-badge pos-${inj.pos}">${inj.pos}</span> ${inj.player}</h3>
+        <div class="meta">${inj.team}${injuredIsRanked ? ' · Rank ' + injuredIsRanked.rank + ' ' + injuredIsRanked.pos : ''}</div>
+        ${statusChip(inj.severity, inj.status)}
+        <div class="rec-line"><strong>Handcuff:</strong> ${inj.handcuff} ${inj.handcuffNote}${handcuffDrafted ? ' <span class="chip chip-ok" style="margin-left:0.4rem;">Drafted</span>' : ''}</div>
+        <div class="rec-line"><i class="fas fa-lightbulb"></i> ${inj.recommendation}</div>
+        ${handcuffToggle}
+      </div>
+    `;
+  }).join('');
+
+  grid.querySelectorAll('.draft-check').forEach(cb => {
+    cb.addEventListener('change', function () {
+      setPlayerDrafted(this.dataset.name, this.checked);
+    });
+  });
+}
+
+onDraftStoreChange(render);
+render();
+</script>
+</body>
+</html>

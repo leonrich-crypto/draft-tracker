@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Draft Tracker · By Position</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="scoreboard">
+  <div class="scoreboard-inner">
+    <div class="scoreboard-top">
+      <div class="wordmark"><i class="fas fa-football" style="color:var(--amber)"></i> Draft Tracker <span class="down">Live Board</span></div>
+      <nav class="nav">
+        <a href="index.html"><i class="fas fa-list"></i>All Players</a>
+        <a href="by-position.html" class="active"><i class="fas fa-layer-group"></i>By Position</a>
+        <a href="injury-report.html"><i class="fas fa-notes-medical"></i>Injuries</a>
+        <a href="sleepers.html"><i class="fas fa-star"></i>Sleepers</a>
+      </nav>
+    </div>
+    <div class="page-title">Ranked board, grouped by position</div>
+  </div>
+  <div class="scoreboard-ticks"></div>
+</header>
+
+<div class="app">
+  <div class="panel">
+    <div class="pos-tabs" id="posTabs"></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:2.5rem;"></th>
+            <th class="num">Rank</th>
+            <th>Player</th>
+            <th>Team</th>
+            <th class="num">Total Pts</th>
+            <th class="num">PPG</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div class="footer-note">
+      <span id="posSummary"></span>
+      <span><i class="fas fa-circle-check"></i> Synced with the main board</span>
+    </div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="store.js"></script>
+<script>
+const posTabs = document.getElementById('posTabs');
+const tbody = document.getElementById('tableBody');
+const posSummary = document.getElementById('posSummary');
+let activePos = 'QB';
+
+function renderTabs() {
+  const drafted = getDraftedSet();
+  posTabs.innerHTML = POSITION_ORDER.map(pos => {
+    const group = PLAYERS.filter(p => p.pos === pos);
+    const left = group.filter(p => !drafted.has(p.player)).length;
+    return `<button class="pos-tab ${pos === activePos ? 'active' : ''}" data-pos="${pos}">
+      ${pos} <span class="count">${left}/${group.length} left</span>
+    </button>`;
+  }).join('');
+
+  posTabs.querySelectorAll('.pos-tab').forEach(btn => {
+    btn.addEventListener('click', () => { activePos = btn.dataset.pos; render(); });
+  });
+}
+
+function render() {
+  renderTabs();
+  const drafted = getDraftedSet();
+  const group = PLAYERS.filter(p => p.pos === activePos).sort((a, b) => a.rank - b.rank);
+
+  if (group.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><i class="fas fa-clipboard-question"></i>No players at this position.</div></td></tr>`;
+  } else {
+    tbody.innerHTML = group.map(p => {
+      const isDrafted = drafted.has(p.player);
+      const isSleeper = SLEEPER_NAMES.has(p.player);
+      const note = isSleeper ? '<i class="fas fa-star sleeper-flag"></i> Sleeper' : '';
+      return `
+        <tr class="${isDrafted ? 'is-drafted' : ''}">
+          <td><input type="checkbox" class="draft-check" data-name="${p.player.replace(/"/g,'&quot;')}" ${isDrafted ? 'checked' : ''} /></td>
+          <td class="num">${p.rank}</td>
+          <td><span class="player-name">${p.player}</span></td>
+          <td>${p.team}</td>
+          <td class="num">${p.pts.toFixed(1)}</td>
+          <td class="num">${p.ppg.toFixed(1)}</td>
+          <td>${note}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  const total = group.length;
+  const draftedInGroup = group.filter(p => drafted.has(p.player)).length;
+  posSummary.textContent = `${activePos}: ${draftedInGroup} drafted, ${total - draftedInGroup} still available`;
+
+  tbody.querySelectorAll('.draft-check').forEach(cb => {
+    cb.addEventListener('change', function () {
+      setPlayerDrafted(this.dataset.name, this.checked);
+    });
+  });
+}
+
+onDraftStoreChange(render);
+render();
+</script>
+</body>
+</html>
