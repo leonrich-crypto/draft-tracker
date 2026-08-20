@@ -24,11 +24,12 @@ const PLAYERS = [
   {pos:'QB',rank:18,player:'Aaron Rodgers',team:'PIT',pts:228.1,ppg:15.2},
   {pos:'QB',rank:19,player:'Kyler Murray',team:'ARI',pts:222.5,ppg:15.9},
   {pos:'QB',rank:20,player:'Jayden Daniels',team:'WAS',pts:218.4,ppg:18.2},
-  {pos:'QB',rank:21,player:'Kirk Cousins',team:'ATL',pts:215.2,ppg:14.3},
+  {pos:'QB',rank:21,player:'Kirk Cousins',team:'LV',pts:215.2,ppg:14.3},
   {pos:'QB',rank:22,player:'Lamar Jackson',team:'BAL',pts:210.8,ppg:17.6},
-  {pos:'QB',rank:23,player:'Tua Tagovailoa',team:'MIA',pts:208.5,ppg:13.9},
+  {pos:'QB',rank:23,player:'Tua Tagovailoa',team:'ATL',pts:208.5,ppg:13.9},
   {pos:'QB',rank:24,player:'Brock Purdy',team:'SF',pts:205.1,ppg:14.6},
   {pos:'QB',rank:25,player:'C.J. Stroud',team:'HOU',pts:201.3,ppg:13.4},
+  {pos:'QB',rank:26,player:'Michael Penix Jr.',team:'ATL',pts:118.0,ppg:8.4},
   {pos:'RB',rank:1,player:'Christian McCaffrey',team:'SF',pts:416.6,ppg:24.5},
   {pos:'RB',rank:2,player:'Bijan Robinson',team:'ATL',pts:370.8,ppg:21.8},
   {pos:'RB',rank:3,player:'Jahmyr Gibbs',team:'DET',pts:366.9,ppg:21.6},
@@ -121,111 +122,115 @@ PLAYERS.forEach((p, i) => { p.id = i; });
 
 const POSITION_ORDER = ['QB', 'RB', 'WR', 'TE', 'K'];
 
+// Sourced from live training-camp coverage (CBS Sports SportsLine model,
+// FantasyPros, Yahoo Sports, SI/On SI) as of August 20, 2026.
 const SLEEPERS = [
+  {
+    player: 'Alec Pierce',
+    pos: 'WR', team: 'IND',
+    category: 'Volume Riser',
+    round: 'Expected Colts WR1 in 2026',
+    upside: 'Led the NFL at 21.3 yards/reception in 2025; signed a big new contract and is Indy\'s clear top target',
+    risk: 'Boom/bust — averaged only 3.1 catches/game; low floor even with big-play ceiling'
+  },
+  {
+    player: 'Isaiah Likely',
+    pos: 'TE', team: 'NYG',
+    category: 'Coaching Reunion',
+    round: 'ADP ~ Round 8-9',
+    upside: "Followed HC John Harbaugh from Baltimore to New York; building early chemistry with Jaxson Dart, no Mark Andrews competing for targets anymore",
+    risk: 'Unproven as a true TE1 workload outside Baltimore\'s system'
+  },
+  {
+    player: 'DeVonta Smith',
+    pos: 'WR', team: 'PHI',
+    category: 'Post-Trade Value',
+    round: 'ADP ~ Round 3',
+    upside: 'Inherits the Eagles\' clear WR1 role now that A.J. Brown was sent to New England; hit 1,000 yards even in a bottom-10 passing offense last year',
+    risk: 'Philly\'s offensive identity still runs through the ground game'
+  },
   {
     player: "De'Zhaun Stribling",
     pos: 'WR', team: 'SF',
-    category: 'Rookie Diamond',
-    round: 'Round 14-15 / ADP 204',
-    upside: 'Vacant target share with Ricky Pearsall out',
-    risk: 'Rookie learning curve'
+    category: 'Rookie Opportunity',
+    round: 'Late-round dart throw',
+    upside: 'Slots in as SF\'s No. 3 target with Ricky Pearsall out for the year; familiar territory in a Kyle Shanahan offense',
+    risk: 'Now sharing snaps with newly-signed veteran Deebo Samuel Sr., not a clean path to volume'
   },
   {
-    player: 'Denzel Boston',
-    pos: 'WR', team: 'CLE',
-    category: 'Rookie Diamond',
-    round: 'Round 12-13 / ADP 169',
-    upside: '6\'4" contested-catch monster; projected starting WR3',
-    risk: 'Inconsistent QB play'
+    player: 'Rome Odunze',
+    pos: 'WR', team: 'CHI',
+    category: 'Injury Beneficiary',
+    round: 'ADP climbing as camp progresses',
+    upside: 'Poised for a bump in early-season targets while Luther Burden III (groin) is expected to miss the preseason',
+    risk: 'Burden is expected back for Week 1, capping the runway'
   },
   {
-    player: 'Caleb Douglas',
-    pos: 'WR', team: 'MIA',
-    category: 'Rookie Diamond',
-    round: 'Round 15+ / ADP 316',
-    upside: "4.39 speed burner in Mike McDaniel's offense",
-    risk: 'Raw route running'
-  },
-  {
-    player: 'Jonah Coleman',
-    pos: 'RB', team: 'DEN',
-    category: 'Rookie Diamond',
-    round: 'Round 13-14 / ADP 185',
-    upside: '5\'8", 220lb power back; primary goal-line threat',
-    risk: 'Sharing snaps in committee'
-  },
-  {
-    player: 'Tyler Shough',
-    pos: 'QB', team: 'NO',
-    category: 'Sophomore Breakout',
-    round: 'Round 13-14 / QB20',
-    upside: "Leads Kellen Moore's fast-paced scheme",
-    risk: 'Unproven over full season'
-  },
-  {
-    player: 'Jonathon Brooks',
-    pos: 'RB', team: 'CAR',
-    category: 'Post-Hype Sleeper',
-    round: 'Round 9-10 / RB32',
-    upside: 'Full year removed from knee surgery in run offense',
-    risk: 'Chuba Hubbard competition'
+    player: 'Jake Tonges',
+    pos: 'TE', team: 'SF',
+    category: 'Injury Handcuff',
+    round: 'Late-round streamer/stash',
+    upside: 'Direct George Kittle replacement if Kittle opens the year on PUP; caught 5 TDs filling in last season',
+    risk: "Value evaporates fast — Kittle is trending toward a Week 1 return"
   }
 ];
 
+// Sourced from live training-camp coverage (FantasyPros, Yahoo Sports,
+// Football Nation, ESPN/AJC joint-practice reporting) as of August 20, 2026.
 const INJURIES = [
-  {
-    player: 'Michael Penix Jr.',
-    pos: 'QB', team: 'ATL',
-    status: 'Out / ACL Rehab',
-    severity: 'out',
-    handcuff: 'Kirk Cousins',
-    handcuffNote: '(ATL QB)',
-    recommendation: 'Draft handcuff late or stash on IR'
-  },
-  {
-    player: 'Anthony Richardson',
-    pos: 'QB', team: 'IND',
-    status: 'Questionable / Shoulder Recovery',
-    severity: 'questionable',
-    handcuff: 'Daniel Jones',
-    handcuffNote: '/ Joe Flacco (IND QB)',
-    recommendation: 'Target handcuff in rounds 9-12'
-  },
-  {
-    player: 'Christian McCaffrey',
-    pos: 'RB', team: 'SF',
-    status: 'Day-to-Day / Calf & Soft Tissue',
-    severity: 'day-to-day',
-    handcuff: 'Jordan Mason',
-    handcuffNote: '/ Isaac Guerendo (SF RB)',
-    recommendation: 'Target handcuff in rounds 9-12'
-  },
-  {
-    player: 'Nick Chubb',
-    pos: 'RB', team: 'CLE',
-    status: 'Out/PUP / Knee Surgery Rehab',
-    severity: 'out',
-    handcuff: 'Jerome Ford',
-    handcuffNote: '/ Pierre Strong Jr. (CLE RB)',
-    recommendation: 'Draft handcuff late or stash on IR'
-  },
   {
     player: 'Ricky Pearsall',
     pos: 'WR', team: 'SF',
-    status: 'Out / Knee Injury',
+    status: 'Out for Season / PCL Surgery',
     severity: 'out',
     handcuff: "De'Zhaun Stribling",
-    handcuffNote: '/ Jauan Jennings (SF WR)',
-    recommendation: 'Draft handcuff late or stash on IR'
+    handcuffNote: '(SF WR — SF also signed veteran Deebo Samuel Sr. to fill the void)',
+    recommendation: 'Off the board for redraft — target the handcuff sleeper instead'
   },
   {
     player: 'George Kittle',
     pos: 'TE', team: 'SF',
-    status: 'Out / Achilles Recovery',
+    status: 'PUP / Achilles Recovery — trending toward Week 1',
+    severity: 'questionable',
+    handcuff: 'Jake Tonges',
+    handcuffNote: '(SF TE, splits reps with Luke Farrell if Kittle opens on PUP)',
+    recommendation: 'Kittle is targeting a Sept. 10 return vs. the Rams — draft as a discounted TE1 with a Week 1-4 contingency plan'
+  },
+  {
+    player: 'Christian McCaffrey',
+    pos: 'RB', team: 'SF',
+    status: 'Day-to-Day / Calf & Soft-Tissue Tightness',
+    severity: 'day-to-day',
+    handcuff: 'Isaac Guerendo',
+    handcuffNote: '(SF RB, also on PUP but expected back Week 1)',
+    recommendation: 'Not a red flag yet, but monitor camp reports closely before draft day'
+  },
+  {
+    player: 'Michael Penix Jr.',
+    pos: 'QB', team: 'ATL',
+    status: 'Not Yet Cleared for 11-on-11 / ACL Recovery',
     severity: 'out',
-    handcuff: 'Eric Saubert',
-    handcuffNote: '/ Jake Tonges (SF TE)',
-    recommendation: 'Draft handcuff late or stash on IR'
+    handcuff: 'Tua Tagovailoa',
+    handcuffNote: '(ATL QB — leading the job by default, but struggling in camp)',
+    recommendation: 'Speculative late-round stash only; ADP has drifted into the 260s while he\'s sidelined'
+  },
+  {
+    player: 'Anthony Richardson',
+    pos: 'QB', team: 'IND',
+    status: 'Roster Uncertainty — Requested Trade',
+    severity: 'questionable',
+    handcuff: 'Daniel Jones',
+    handcuffNote: "(IND QB, ahead of him — Jones looks 'flawless' returning from his own Achilles tear)",
+    recommendation: 'Dynasty stash only if he\'s dealt — not draftable as a Colts backup in redraft'
+  },
+  {
+    player: 'Malik Nabers',
+    pos: 'WR', team: 'NYG',
+    status: 'Recovering from ACL Tear — trending well',
+    severity: 'questionable',
+    handcuff: "Wan'Dale Robinson",
+    handcuffNote: '(NYG WR, next in line for target share if Nabers is limited)',
+    recommendation: 'Nabers is back practicing and on track for Week 1 — a discount worth buying if his ADP hasn\'t corrected yet'
   }
 ];
 
