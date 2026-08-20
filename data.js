@@ -124,13 +124,15 @@ const POSITION_ORDER = ['QB', 'RB', 'WR', 'TE', 'K'];
 
 // Sourced from live training-camp coverage (CBS Sports SportsLine model,
 // FantasyPros, Yahoo Sports, SI/On SI) as of August 20, 2026.
+// Sourced from live training-camp coverage (CBS Sports SportsLine model,
+// FantasyPros, Yahoo Sports, NFL.com, ESPN, FanDuel Research) as of Aug 20, 2026.
 const SLEEPERS = [
   {
     player: 'Alec Pierce',
     pos: 'WR', team: 'IND',
     category: 'Volume Riser',
-    round: 'Expected Colts WR1 in 2026',
-    upside: 'Led the NFL at 21.3 yards/reception in 2025; signed a big new contract and is Indy\'s clear top target',
+    round: "Colts' new clear-cut WR1",
+    upside: 'Led the NFL at 21.3 yards/reception in 2025; signed a big new contract this offseason',
     risk: 'Boom/bust — averaged only 3.1 catches/game; low floor even with big-play ceiling'
   },
   {
@@ -138,7 +140,7 @@ const SLEEPERS = [
     pos: 'TE', team: 'NYG',
     category: 'Coaching Reunion',
     round: 'ADP ~ Round 8-9',
-    upside: "Followed HC John Harbaugh from Baltimore to New York; building early chemistry with Jaxson Dart, no Mark Andrews competing for targets anymore",
+    upside: "Followed HC John Harbaugh from Baltimore to New York; building chemistry with Jaxson Dart, no Mark Andrews competing for targets anymore",
     risk: 'Unproven as a true TE1 workload outside Baltimore\'s system'
   },
   {
@@ -172,6 +174,102 @@ const SLEEPERS = [
     round: 'Late-round streamer/stash',
     upside: 'Direct George Kittle replacement if Kittle opens the year on PUP; caught 5 TDs filling in last season',
     risk: "Value evaporates fast — Kittle is trending toward a Week 1 return"
+  },
+  {
+    player: 'Jeremiyah Love',
+    pos: 'RB', team: 'ARI',
+    category: 'Rookie Weapon',
+    round: 'No. 4 overall pick',
+    upside: 'Joins a Cardinals offense with Trey McBride and a full season of Jacoby Brissett as starter',
+    risk: 'Rookie touch-share is never guaranteed even for top picks'
+  },
+  {
+    player: 'Jacoby Brissett',
+    pos: 'QB', team: 'ARI',
+    category: 'Prove-It Starter',
+    round: 'Late-round QB2',
+    upside: 'Threw for 3,300 yards and 23 TDs in 12 starts last year; now gets a full offseason as QB1 with McBride, Harrison Jr. and Wilson',
+    risk: 'Journeyman ceiling — hasn\'t sustained a full season as a starter before'
+  },
+  {
+    player: 'Tyler Shough',
+    pos: 'QB', team: 'NO',
+    category: 'Sophomore Breakout',
+    round: 'Climbing draft boards in August',
+    upside: "Leads Kellen Moore's fast-paced scheme with explosive rookie speed at receiver",
+    risk: 'Unproven over a full season'
+  },
+  {
+    player: 'Jordyn Tyson',
+    pos: 'WR', team: 'NO',
+    category: 'Rookie Speed',
+    round: 'Deep-league dart throw',
+    upside: 'Gives New Orleans a legitimate explosive threat if he stays healthy through camp',
+    risk: 'Rookie WR volatility, tied to Shough\'s development'
+  },
+  {
+    player: 'Woody Marks',
+    pos: 'RB', team: 'HOU',
+    category: 'Camp Winner',
+    round: 'Value RB2',
+    upside: 'Won the Texans\' backfield job outright, pushing veteran Nick Chubb out of the picture entirely by midseason last year',
+    risk: 'Houston could still add competition; unproven as a full-time back'
+  },
+  {
+    player: 'Josh Downs',
+    pos: 'WR', team: 'IND',
+    category: 'Value Pick',
+    round: 'Colts No. 2 option',
+    upside: 'Reliable slot role behind Alec Pierce in a top-ranked Colts offense',
+    risk: 'Dealing with a minor groin issue in camp; ceiling capped by Pierce\'s target share'
+  },
+  {
+    player: 'Tank Dell',
+    pos: 'WR', team: 'HOU',
+    category: 'Post-Hype Sleeper',
+    round: 'Deep-league stash',
+    upside: 'Back in full pads for the first time since injury; explosive YAC threat alongside Nico Collins when healthy',
+    risk: 'Long layoff — unproven after a full season away from football'
+  },
+  {
+    player: 'Stefon Diggs',
+    pos: 'WR', team: 'WAS',
+    category: 'Fresh Start',
+    round: 'ADP still settling',
+    upside: 'Just signed with Washington; proven target earner if he can stay on the field',
+    risk: 'ADP is a moving target since the signing happened so recently in camp'
+  },
+  {
+    player: 'Jayden Higgins',
+    pos: 'WR', team: 'HOU',
+    category: 'Sophomore Riser',
+    round: 'Part of the Iowa State duo',
+    upside: 'Flashed real talent as a rookie in a crowded Texans receiver room that\'s since been upgraded around him',
+    risk: 'Target competition with Nico Collins, Tank Dell and Jaylin Noel'
+  },
+  {
+    player: 'Jaylin Noel',
+    pos: 'WR', team: 'HOU',
+    category: 'Sophomore Riser',
+    round: 'Part of the Iowa State duo',
+    upside: 'Houston\'s revamped offensive line and tempo should create more volume to go around',
+    risk: 'Same crowded target competition as Higgins'
+  },
+  {
+    player: 'Greg Dulcich',
+    pos: 'TE', team: 'MIA',
+    category: 'Efficiency Darling',
+    round: 'Mostly undrafted',
+    upside: 'Ranked top-6 among TEs in targets/route and yards/route run in 2025; Miami\'s receiving corps still lacks a clear high-volume option',
+    risk: 'Going undrafted in most leagues for a reason — role still needs to be earned'
+  },
+  {
+    player: 'Jonathon Brooks',
+    pos: 'RB', team: 'CAR',
+    category: 'Post-Hype Sleeper',
+    round: 'Round 9-10 / RB32',
+    upside: 'Full year removed from knee surgery in a run-heavy Panthers offense',
+    risk: 'Chuba Hubbard competition for early-down work'
   }
 ];
 

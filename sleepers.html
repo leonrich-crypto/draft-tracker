@@ -27,48 +27,107 @@
 </header>
 
 <div class="app">
-  <div id="sleeperGrid" class="card-grid"></div>
+  <div class="panel">
+    <div class="toolbar">
+      <input type="text" id="searchInput" placeholder="Search player, team, category, or note" style="flex:1; min-width:200px;" />
+      <select id="filterPos">
+        <option value="all">All positions</option>
+        <option value="QB">QB</option>
+        <option value="RB">RB</option>
+        <option value="WR">WR</option>
+        <option value="TE">TE</option>
+      </select>
+      <select id="filterStatus">
+        <option value="all">All sleepers</option>
+        <option value="drafted">Drafted only</option>
+        <option value="undrafted">Available only</option>
+      </select>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:2.5rem;"></th>
+            <th>Pos</th>
+            <th>Player</th>
+            <th>Team</th>
+            <th>Category</th>
+            <th>Why</th>
+            <th>Risk</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+
+    <div class="footer-note">
+      <span id="sleeperSummary"></span>
+      <span><i class="fas fa-circle-check"></i> Synced with the main board</span>
+    </div>
+  </div>
 </div>
 
 <script src="data.js"></script>
 <script src="store.js"></script>
 <script>
-const grid = document.getElementById('sleeperGrid');
+const tbody = document.getElementById('tableBody');
+const searchInput = document.getElementById('searchInput');
+const filterPos = document.getElementById('filterPos');
+const filterStatus = document.getElementById('filterStatus');
+const sleeperSummary = document.getElementById('sleeperSummary');
 
 function render() {
   const drafted = getDraftedSet();
+  const search = searchInput.value.toLowerCase().trim();
+  const pos = filterPos.value;
+  const status = filterStatus.value;
 
-  grid.innerHTML = SLEEPERS.map(s => {
+  let filtered = SLEEPERS.filter(s => {
     const isDrafted = drafted.has(s.player);
-    const stamp = isDrafted ? '<div class="stamp">Drafted</div>' : '';
-    return `
-      <div class="card ${isDrafted ? 'is-drafted' : ''}">
-        ${stamp}
-        <h3><i class="fas fa-star" style="color:var(--amber);"></i> ${s.player}</h3>
-        <div class="meta">
-          <span class="pos-badge pos-${s.pos}" style="width:1.5rem;height:1.5rem;font-size:0.6rem;vertical-align:middle;">${s.pos}</span>
-          ${s.team} · ${s.round}
-        </div>
-        <span class="chip chip-amber">${s.category}</span>
-        <div class="upside"><i class="fas fa-arrow-up"></i>${s.upside}</div>
-        <div class="risk-line"><i class="fas fa-triangle-exclamation"></i>${s.risk}</div>
-        <div class="draft-toggle">
-          <label>
-            <input type="checkbox" class="draft-check" data-name="${s.player.replace(/"/g,'&quot;')}" ${isDrafted ? 'checked' : ''} />
-            Mark drafted
-          </label>
-        </div>
-      </div>
-    `;
-  }).join('');
+    if (status === 'drafted' && !isDrafted) return false;
+    if (status === 'undrafted' && isDrafted) return false;
+    if (pos !== 'all' && s.pos !== pos) return false;
+    if (search) {
+      const hay = (s.player + ' ' + s.team + ' ' + s.pos + ' ' + s.category + ' ' + s.upside + ' ' + s.risk).toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
 
-  grid.querySelectorAll('.draft-check').forEach(cb => {
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><i class="fas fa-clipboard-question"></i>No sleepers match those filters.</div></td></tr>`;
+  } else {
+    tbody.innerHTML = filtered.map(s => {
+      const isDrafted = drafted.has(s.player);
+      return `
+        <tr class="${isDrafted ? 'is-drafted' : ''}">
+          <td><input type="checkbox" class="draft-check" data-name="${s.player.replace(/"/g,'&quot;')}" ${isDrafted ? 'checked' : ''} /></td>
+          <td><span class="pos-badge pos-${s.pos}">${s.pos}</span></td>
+          <td><span class="player-name"><i class="fas fa-star sleeper-flag"></i> ${s.player}</span></td>
+          <td>${s.team}</td>
+          <td><span class="chip chip-amber">${s.category}</span></td>
+          <td style="max-width:260px;">${s.upside}</td>
+          <td style="max-width:220px;color:var(--flag);">${s.risk}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  const total = SLEEPERS.length;
+  const draftedTotal = SLEEPERS.filter(s => drafted.has(s.player)).length;
+  sleeperSummary.textContent = `${total} sleepers tracked · ${draftedTotal} drafted · ${total - draftedTotal} still available`;
+
+  tbody.querySelectorAll('.draft-check').forEach(cb => {
     cb.addEventListener('change', function () {
       setPlayerDrafted(this.dataset.name, this.checked);
     });
   });
 }
 
+searchInput.addEventListener('input', render);
+filterPos.addEventListener('change', render);
+filterStatus.addEventListener('change', render);
 onDraftStoreChange(render);
 render();
 </script>
