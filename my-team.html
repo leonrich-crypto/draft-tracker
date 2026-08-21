@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Draft Tracker · My Team</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="scoreboard">
+  <div class="scoreboard-inner">
+    <div class="scoreboard-top">
+      <div class="wordmark"><i class="fas fa-football" style="color:var(--amber)"></i> Draft Tracker <span class="down">Live Board</span></div>
+      <nav class="nav">
+        <a href="index.html"><i class="fas fa-list"></i>All Players</a>
+        <a href="by-position.html"><i class="fas fa-layer-group"></i>By Position</a>
+        <a href="injury-report.html"><i class="fas fa-notes-medical"></i>Injuries</a>
+        <a href="my-team.html" class="active"><i class="fas fa-user-shield"></i>My Team</a>
+        <a href="sleepers.html"><i class="fas fa-star"></i>Sleepers</a>
+      </nav>
+    </div>
+    <div class="page-title">Your drafted roster, auto-slotted into a starting lineup</div>
+    <div class="roster-summary-bar" id="summaryBar"></div>
+  </div>
+  <div class="scoreboard-ticks"></div>
+</header>
+
+<div class="app">
+  <div class="panel">
+    <div class="roster-heading">Starters</div>
+    <div id="startersList"></div>
+
+    <div class="roster-heading">Bench</div>
+    <div id="benchList"></div>
+
+    <div class="footer-note">
+      <span><i class="fas fa-circle-check"></i> Starters auto-fill with your best drafted player at each slot, ranked by 2026 projection</span>
+      <span><a href="index.html">Go draft more players &rarr;</a></span>
+    </div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="store.js"></script>
+<script>
+// Starting lineup shape. FLEX accepts WR/RB/TE.
+const STARTING_SLOTS = [
+  { label: 'QB',   accepts: ['QB'] },
+  { label: 'RB',   accepts: ['RB'] },
+  { label: 'RB',   accepts: ['RB'] },
+  { label: 'WR',   accepts: ['WR'] },
+  { label: 'WR',   accepts: ['WR'] },
+  { label: 'TE',   accepts: ['TE'] },
+  { label: 'FLEX', accepts: ['WR', 'RB', 'TE'] },
+  { label: 'FLEX', accepts: ['WR', 'RB', 'TE'] },
+  { label: 'K',    accepts: ['K'] },
+  { label: 'DEF',  accepts: ['DEF'] },
+];
+
+function qualityScore(p) {
+  // Prefer real 2026 projection; fall back to 2025 actuals; else 0.
+  if (p.projPts > 0) return p.projPts;
+  if (p.pts > 0) return p.pts;
+  return 0;
+}
+
+function renderSlot(label, player) {
+  if (!player) {
+    return `
+      <div class="roster-slot">
+        <div class="slot-tag tag-${label}">${label}</div>
+        <div class="slot-body"><span class="slot-empty">Empty — draft a ${label === 'FLEX' ? 'WR/RB/TE' : label} to fill this slot</span></div>
+      </div>
+    `;
+  }
+  const proj = player.projPts > 0 ? player.projPts.toFixed(1) : '—';
+  return `
+    <div class="roster-slot is-filled">
+      <div class="slot-tag tag-${label}">${label}</div>
+      <div class="slot-body">
+        <div class="slot-player-name">${player.player}</div>
+        <div class="slot-player-meta">${player.pos} &middot; ${player.team}${SLEEPER_NAMES.has(player.player) ? ' &middot; <i class="fas fa-star sleeper-flag"></i> Sleeper' : ''}</div>
+      </div>
+      <div class="slot-stat">${proj}<br><span style="font-size:0.7rem;">2026 proj</span></div>
+    </div>
+  `;
+}
+
+function render() {
+  const drafted = getDraftedSet();
+  const startersList = document.getElementById('startersList');
+  const benchList = document.getElementById('benchList');
+  const summaryBar = document.getElementById('summaryBar');
+
+  // Build the pool of drafted player objects, best-quality-first within each position.
+  const pool = PLAYERS.filter(p => drafted.has(p.player));
+  pool.sort((a, b) => qualityScore(b) - qualityScore(a));
+
+  const used = new Set();
+  const filledSlots = STARTING_SLOTS.map(slot => {
+    const candidate = pool.find(p => !used.has(p.id) && slot.accepts.includes(p.pos));
+    if (candidate) used.add(candidate.id);
+    return { label: slot.label, player: candidate || null };
+  });
+
+  const bench = pool.filter(p => !used.has(p.id));
+
+  startersList.innerHTML = filledSlots.map(s => renderSlot(s.label, s.player)).join('');
+
+  if (bench.length === 0) {
+    benchList.innerHTML = `<div class="roster-slot"><div class="slot-tag tag-BN">BN</div><div class="slot-body"><span class="slot-empty">No bench players yet</span></div></div>`;
+  } else {
+    benchList.innerHTML = bench.map(p => renderSlot('BN', p)).join('');
+  }
+
+  const filledCount = filledSlots.filter(s => s.player).length;
+  summaryBar.innerHTML = `
+    <div class="digit-card"><span class="digit">${filledCount}/${STARTING_SLOTS.length}</span><span class="digit-label">Starters Filled</span></div>
+    <div class="digit-card"><span class="digit">${bench.length}</span><span class="digit-label">On Bench</span></div>
+    <div class="digit-card"><span class="digit">${pool.length}</span><span class="digit-label">Total Drafted</span></div>
+  `;
+}
+
+onDraftStoreChange(render);
+render();
+</script>
+</body>
+</html>

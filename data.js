@@ -280,12 +280,45 @@ const PLAYERS = [
   {pos:'WR',rank:103,player:'Jaylin Lane',team:'WAS',pts:49.2,ppg:3.3,projPts:0.0,projPpg:0.0},
   {pos:'WR',rank:104,player:'Cryus Allen',team:'KC',pts:0.0,ppg:0.0,projPts:0.0,projPpg:0.0},
   {pos:'QB',rank:32,player:'Tua Tagovailoa',team:'ATL',pts:175.6,ppg:12.5,projPts:264.0,projPpg:15.5}
+,
+  {pos:'DEF',rank:1,player:'Denver Broncos D/ST',team:'DEN',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:2,player:'Houston Texans D/ST',team:'HOU',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:3,player:'Pittsburgh Steelers D/ST',team:'PIT',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:4,player:'Seattle Seahawks D/ST',team:'SEA',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:5,player:'Los Angeles Rams D/ST',team:'LAR',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:6,player:'Baltimore Ravens D/ST',team:'BAL',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:7,player:'Philadelphia Eagles D/ST',team:'PHI',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:8,player:'Cleveland Browns D/ST',team:'CLE',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:9,player:'New England Patriots D/ST',team:'NE',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:10,player:'Detroit Lions D/ST',team:'DET',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:11,player:'Kansas City Chiefs D/ST',team:'KC',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:12,player:'Los Angeles Chargers D/ST',team:'LAC',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:13,player:'Tampa Bay Buccaneers D/ST',team:'TB',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:14,player:'Green Bay Packers D/ST',team:'GB',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:15,player:'Jacksonville Jaguars D/ST',team:'JAC',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:16,player:'Indianapolis Colts D/ST',team:'IND',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:17,player:'Cincinnati Bengals D/ST',team:'CIN',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:18,player:'Chicago Bears D/ST',team:'CHI',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:19,player:'San Francisco 49ers D/ST',team:'SF',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:20,player:'New York Jets D/ST',team:'NYJ',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:21,player:'New Orleans Saints D/ST',team:'NO',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:22,player:'Carolina Panthers D/ST',team:'CAR',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:23,player:'Arizona Cardinals D/ST',team:'ARI',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:24,player:'Atlanta Falcons D/ST',team:'ATL',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:25,player:'Buffalo Bills D/ST',team:'BUF',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:26,player:'Dallas Cowboys D/ST',team:'DAL',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:27,player:'Miami Dolphins D/ST',team:'MIA',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:28,player:'Minnesota Vikings D/ST',team:'MIN',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:29,player:'New York Giants D/ST',team:'NYG',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:30,player:'Las Vegas Raiders D/ST',team:'LV',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:31,player:'Tennessee Titans D/ST',team:'TEN',pts:0,ppg:0,projPts:0,projPpg:0},
+  {pos:'DEF',rank:32,player:'Washington Commanders D/ST',team:'WAS',pts:0,ppg:0,projPts:0,projPpg:0}
 ];
 
 // Give every player a stable id (index is fine — PLAYERS is a fixed list).
 PLAYERS.forEach((p, i) => { p.id = i; });
 
-const POSITION_ORDER = ['QB', 'RB', 'WR', 'TE', 'K'];
+const POSITION_ORDER = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'];
 
 // Sourced from live training-camp coverage (CBS Sports SportsLine model,
 // FantasyPros, Yahoo Sports, SI/On SI) as of August 20, 2026.

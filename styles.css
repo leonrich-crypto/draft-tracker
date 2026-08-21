@@ -247,6 +247,8 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 .pos-WR { background: #2b6f82; }
 .pos-TE { background: #6d5490; }
 .pos-K  { background: #6b7280; }
+.pos-DEF { background: #3d3a2e; }
+.pos-FLEX { background: #a4763a; }
 
 /* ---------- Table (stat sheet) ---------- */
 
@@ -442,4 +444,80 @@ tr.is-drafted .player-name { text-decoration: line-through; text-decoration-colo
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
+}
+
+/* ---------- My Team / Dashboard roster slots ---------- */
+
+.roster-heading {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+  margin: 1.3rem 0 0.6rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--line);
+}
+
+.roster-heading:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+
+.roster-slot {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: white;
+  margin-bottom: 0.5rem;
+}
+
+.roster-slot.is-filled { border-color: var(--field); background: var(--ok-soft); }
+
+.slot-tag {
+  flex-shrink: 0;
+  width: 3.4rem;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  padding: 0.3rem 0;
+  border-radius: 6px;
+  color: white;
+  background: var(--ink-soft);
+}
+
+.slot-tag.tag-QB { background: #b8463b; }
+.slot-tag.tag-RB { background: #2c6b45; }
+.slot-tag.tag-WR { background: #2b6f82; }
+.slot-tag.tag-TE { background: #6d5490; }
+.slot-tag.tag-FLEX { background: #a4763a; }
+.slot-tag.tag-K { background: #6b7280; }
+.slot-tag.tag-DEF { background: #3d3a2e; }
+.slot-tag.tag-BN { background: var(--line); color: var(--ink-soft); }
+
+.slot-body { flex: 1; min-width: 0; }
+
+.slot-empty { color: var(--ink-soft); font-style: italic; font-size: 0.9rem; }
+
+.slot-player-name { font-weight: 600; }
+
+.slot-player-meta { font-size: 0.8rem; color: var(--ink-soft); margin-top: 0.1rem; }
+
+.slot-stat {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  flex-shrink: 0;
+  text-align: right;
+  min-width: 3.5rem;
+}
+
+.roster-summary-bar {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 1.2rem;
 }
