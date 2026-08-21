@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Draft Tracker · Teams</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+<link rel="stylesheet" href="styles.css" />
+<style>
+  .teams-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+  .team-card { background: white; border-radius: 16px; border: 1px solid var(--chalk-dim); box-shadow: 0 2px 10px rgba(23,35,26,0.05); padding: 1.2rem; }
+  .team-card.is-me { border-color: var(--field); box-shadow: 0 4px 14px rgba(28,74,48,0.15); }
+  .team-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.8rem; }
+  .team-card-name { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; }
+  .team-pick-count { font-family: var(--font-mono); font-size: 0.8rem; color: var(--ink-soft); }
+  .team-pick-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0; border-bottom: 1px solid var(--chalk-dim); font-size: 0.88rem; }
+  .team-pick-row:last-child { border-bottom: none; }
+  .team-pick-round { font-family: var(--font-mono); color: var(--ink-soft); font-size: 0.75rem; width: 2.2rem; flex-shrink: 0; }
+  .recent-strip { display: flex; gap: 0.6rem; overflow-x: auto; padding-bottom: 0.4rem; }
+  .recent-pill { flex-shrink: 0; background: white; border: 1px solid var(--chalk-dim); border-radius: 20px; padding: 0.4rem 0.9rem; font-size: 0.82rem; display: flex; align-items: center; gap: 0.5rem; white-space: nowrap; }
+  .recent-pill .pick-no { font-family: var(--font-mono); color: var(--amber); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<header class="scoreboard">
+  <div class="scoreboard-inner">
+    <div class="scoreboard-top">
+      <div class="wordmark"><i class="fas fa-football" style="color:var(--amber)"></i> Draft Tracker <span class="down">Live Board</span></div>
+      <nav class="nav">
+        <a href="index.html"><i class="fas fa-list"></i>All Players</a>
+        <a href="by-position.html"><i class="fas fa-layer-group"></i>By Position</a>
+        <a href="injury-report.html"><i class="fas fa-notes-medical"></i>Injuries</a>
+        <a href="my-team.html"><i class="fas fa-user-shield"></i>My Team</a>
+        <a href="teams.html" class="active"><i class="fas fa-people-group"></i>Teams</a>
+        <a href="sleepers.html"><i class="fas fa-star"></i>Sleepers</a>
+      </nav>
+    </div>
+    <div class="page-title">Every manager's picks, live from your Sleeper draft</div>
+  </div>
+  <div class="scoreboard-ticks"></div>
+</header>
+
+<div class="app">
+  <div id="notConnected" class="panel" style="display:none; text-align:center; padding:3rem 1.5rem;">
+    <i class="fas fa-satellite-dish" style="font-size:2rem; color:var(--line); display:block; margin-bottom:0.8rem;"></i>
+    <p style="color:var(--ink-soft); margin-bottom:1rem;">Connect a Sleeper league on My Team first, and this page fills in with every manager's live picks.</p>
+    <a href="my-team.html" class="btn"><i class="fas fa-link"></i> Go connect a league</a>
+  </div>
+
+  <div id="connectedView" style="display:none;">
+    <div class="panel" style="margin-bottom:1.2rem;">
+      <div class="roster-heading" style="margin-top:0; padding-top:0; border-top:none;"><i class="fas fa-clock-rotate-left"></i>Recent Picks</div>
+      <div class="recent-strip" id="recentStrip"></div>
+    </div>
+
+    <div class="teams-grid" id="teamsGrid"></div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="store.js"></script>
+<script src="sleeper-sync.js"></script>
+<script>
+function posBadge(pos) {
+  return `<span class="pos-badge pos-${pos}" style="width:1.6rem;height:1.6rem;font-size:0.58rem;">${pos}</span>`;
+}
+
+function render() {
+  const cfg = getSleeperConfig();
+  const notConnected = document.getElementById('notConnected');
+  const connectedView = document.getElementById('connectedView');
+
+  if (!cfg || !cfg.draftId) {
+    notConnected.style.display = 'block';
+    connectedView.style.display = 'none';
+    return;
+  }
+  notConnected.style.display = 'none';
+  connectedView.style.display = 'block';
+
+  const data = getPicksByRoster();
+  const byRoster = data.byRoster || {};
+  const recent = data.recent || [];
+  const teams = cfg.teams || {};
+
+  const recentStrip = document.getElementById('recentStrip');
+  if (recent.length === 0) {
+    recentStrip.innerHTML = `<span style="color:var(--ink-soft); font-size:0.85rem;">No picks synced yet — waiting on the first pick.</span>`;
+  } else {
+    recentStrip.innerHTML = recent.map(p => {
+      const team = teams[p.rosterId];
+      const teamLabel = team ? (team.teamName || team.ownerName) : `Team ${p.rosterId}`;
+      return `
+        <div class="recent-pill">
+          <span class="pick-no">#${p.pickNo}</span>
+          ${posBadge(p.pos)}
+          <strong>${p.player}</strong>
+          <span style="color:var(--ink-soft);">&rarr; ${teamLabel}</span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  const teamsGrid = document.getElementById('teamsGrid');
+  const rosterIds = Object.keys(byRoster).sort((a, b) => {
+    const teamA = teams[a], teamB = teams[b];
+    const nameA = teamA ? (teamA.teamName || teamA.ownerName || '') : '';
+    const nameB = teamB ? (teamB.teamName || teamB.ownerName || '') : '';
+    return nameA.localeCompare(nameB);
+  });
+
+  // Also show connected teams that have made zero picks yet, so the grid doesn't hide anyone.
+  Object.keys(teams).forEach(rid => { if (!rosterIds.includes(rid)) rosterIds.push(rid); });
+
+  if (rosterIds.length === 0) {
+    teamsGrid.innerHTML = `<div class="panel" style="grid-column:1/-1; text-align:center; color:var(--ink-soft);">No picks synced yet.</div>`;
+  } else {
+    teamsGrid.innerHTML = rosterIds.map(rid => {
+      const team = teams[rid];
+      const isMe = cfg.userId && team && String(team.ownerId) === String(cfg.userId);
+      const teamName = team ? (team.teamName || team.ownerName || `Team ${rid}`) : `Team ${rid}`;
+      const picks = (byRoster[rid] || []);
+      const picksHtml = picks.length === 0
+        ? `<div style="color:var(--ink-soft); font-size:0.85rem; padding:0.5rem 0;">No picks yet</div>`
+        : picks.map(p => `
+            <div class="team-pick-row">
+              <span class="team-pick-round">R${p.round}</span>
+              ${posBadge(p.pos)}
+              <span style="flex:1;">${p.player}</span>
+              <span style="color:var(--ink-soft); font-size:0.78rem;">${p.team}</span>
+            </div>
+          `).join('');
+      return `
+        <div class="team-card ${isMe ? 'is-me' : ''}">
+          <div class="team-card-head">
+            <span class="team-card-name">${teamName}${isMe ? ' <span class="chip chip-ok" style="margin-left:0.4rem;">You</span>' : ''}</span>
+            <span class="team-pick-count">${picks.length} picks</span>
+          </div>
+          ${picksHtml}
+        </div>
+      `;
+    }).join('');
+  }
+}
+
+onSleeperSyncTick(render);
+onSleeperConfigChange(render);
+onPicksByRosterChange(render);
+render();
+</script>
+</body>
+</html>

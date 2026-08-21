@@ -18,6 +18,7 @@
         <a href="by-position.html"><i class="fas fa-layer-group"></i>By Position</a>
         <a href="injury-report.html"><i class="fas fa-notes-medical"></i>Injuries</a>
         <a href="my-team.html" class="active"><i class="fas fa-user-shield"></i>My Team</a>
+        <a href="teams.html"><i class="fas fa-people-group"></i>Teams</a>
         <a href="sleepers.html"><i class="fas fa-star"></i>Sleepers</a>
       </nav>
     </div>
@@ -206,6 +207,9 @@ function renderSleeperPanel() {
           const user = await sleeperLookupUser(uname);
           const c = getSleeperConfig();
           c.userId = user.user_id;
+          if (!c.teams || Object.keys(c.teams).length === 0) {
+            c.teams = await sleeperBuildTeamsMap(c.leagueId).catch(() => ({}));
+          }
           setSleeperConfig(c);
           await sleeperSyncOnce();
           renderSleeperPanel();
@@ -273,12 +277,14 @@ async function connectByUrl() {
     if (!res.ok) throw new Error('Could not find that league on Sleeper.');
     const league = await res.json();
     if (!league.draft_id) throw new Error('This league has no draft set up yet on Sleeper.');
+    const teams = await sleeperBuildTeamsMap(league.league_id).catch(() => ({}));
     setSleeperConfig({
       leagueId: league.league_id,
       draftId: league.draft_id,
       leagueName: league.name,
       status: league.status,
       userId: null, // unknown until they also search by username
+      teams,
     });
     startSleeperPolling();
     renderSleeperPanel();
@@ -345,15 +351,18 @@ function connectLeague(league) {
     document.getElementById('sleeperError').textContent = 'This league has no draft set up yet on Sleeper.';
     return;
   }
-  setSleeperConfig({
-    leagueId: league.league_id,
-    draftId: league.draft_id,
-    leagueName: league.name,
-    status: league.status,
-    userId: league._userId,
+  sleeperBuildTeamsMap(league.league_id).catch(() => ({})).then((teams) => {
+    setSleeperConfig({
+      leagueId: league.league_id,
+      draftId: league.draft_id,
+      leagueName: league.name,
+      status: league.status,
+      userId: league._userId,
+      teams,
+    });
+    startSleeperPolling();
+    renderSleeperPanel();
   });
-  startSleeperPolling();
-  renderSleeperPanel();
 }
 
 onSleeperSyncTick(() => { renderSleeperPanel(); render(); });

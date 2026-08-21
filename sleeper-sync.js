@@ -57,6 +57,59 @@ function onMyPicksChange(cb) {
   window.addEventListener('storage', (e) => { if (e.key === MY_PICKS_KEY) cb(); });
 }
 
+async function sleeperFetchRosters(leagueId) {
+  const res = await fetch(`https://api.sleeper.app/v1/league/${leagueId}/rosters`);
+  if (!res.ok) throw new Error('Could not load rosters');
+  return res.json();
+}
+
+async function sleeperFetchUsers(leagueId) {
+  const res = await fetch(`https://api.sleeper.app/v1/league/${leagueId}/users`);
+  if (!res.ok) throw new Error('Could not load league members');
+  return res.json();
+}
+
+async function sleeperBuildTeamsMap(leagueId) {
+  const [rosters, users] = await Promise.all([sleeperFetchRosters(leagueId), sleeperFetchUsers(leagueId)]);
+  const userById = {};
+  users.forEach(u => { userById[u.user_id] = u; });
+  const teams = {};
+  rosters.forEach(r => {
+    const u = userById[r.owner_id];
+    teams[r.roster_id] = {
+      rosterId: r.roster_id,
+      ownerId: r.owner_id,
+      teamName: u && u.metadata && u.metadata.team_name ? u.metadata.team_name : (u ? u.display_name : `Team ${r.roster_id}`),
+      ownerName: u ? u.display_name : null,
+      avatar: u ? u.avatar : null,
+    };
+  });
+  return teams;
+}
+
+// ---------- Picks grouped by team (for the Teams / draft board page) ----------
+
+const PICKS_BY_ROSTER_KEY = 'ff-draft-tracker:picks-by-roster-v1';
+
+function getPicksByRoster() {
+  try {
+    const raw = localStorage.getItem(PICKS_BY_ROSTER_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function savePicksByRoster(data) {
+  localStorage.setItem(PICKS_BY_ROSTER_KEY, JSON.stringify(data));
+  window.dispatchEvent(new CustomEvent('picks-by-roster-change'));
+}
+
+function onPicksByRosterChange(cb) {
+  window.addEventListener('picks-by-roster-change', cb);
+  window.addEventListener('storage', (e) => { if (e.key === PICKS_BY_ROSTER_KEY) cb(); });
+}
+
 // ---------- Name matching ----------
 
 function sleeperNormalize(name) {
@@ -121,6 +174,9 @@ async function sleeperSyncOnce() {
     let myChanged = false;
     let matchedCount = 0;
 
+    const byRoster = {};
+    const recent = [];
+
     picks.forEach((pick) => {
       const player = findPlayerBySleeperPick(pick);
       if (!player) return;
@@ -134,7 +190,17 @@ async function sleeperSyncOnce() {
         myPicks.add(player.player);
         myChanged = true;
       }
+
+      const rosterId = String(pick.roster_id || pick.draft_slot || 'unknown');
+      if (!byRoster[rosterId]) byRoster[rosterId] = [];
+      const entry = { player: player.player, pos: player.pos, team: player.team, pickNo: pick.pick_no, round: pick.round };
+      byRoster[rosterId].push(entry);
+      recent.push({ ...entry, rosterId });
     });
+
+    Object.keys(byRoster).forEach(rid => byRoster[rid].sort((a, b) => a.pickNo - b.pickNo));
+    recent.sort((a, b) => b.pickNo - a.pickNo);
+    savePicksByRoster({ byRoster, recent: recent.slice(0, 12), updatedAt: Date.now() });
 
     if (draftedChanged) saveDraftedSet(drafted);
     if (myChanged) saveMyPicksSet(myPicks);
