@@ -455,36 +455,64 @@ tr.is-drafted .player-name { text-decoration: line-through; text-decoration-colo
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--ink-soft);
-  margin: 1.3rem 0 0.6rem;
-  padding-top: 1rem;
+  margin: 1.6rem 0 0.8rem;
+  padding-top: 1.2rem;
   border-top: 1px dashed var(--line);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
+.roster-heading i { color: var(--amber); }
+
 .roster-heading:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+
+.starters-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.7rem;
+}
+
+@media (max-width: 720px) {
+  .starters-grid { grid-template-columns: 1fr; }
+}
 
 .roster-slot {
   display: flex;
   align-items: center;
-  gap: 0.9rem;
-  padding: 0.75rem 0.9rem;
-  border-radius: 8px;
+  gap: 0.85rem;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
   border: 1px solid var(--line);
   background: white;
-  margin-bottom: 0.5rem;
+  transition: 0.15s;
 }
 
-.roster-slot.is-filled { border-color: var(--field); background: var(--ok-soft); }
+.roster-slot.is-filled {
+  border-color: var(--field);
+  border-left-width: 4px;
+  background: linear-gradient(90deg, var(--ok-soft) 0%, white 18%);
+  box-shadow: 0 2px 6px rgba(28, 74, 48, 0.08);
+}
+
+.roster-slot.is-empty {
+  border-style: dashed;
+  background: var(--chalk);
+}
 
 .slot-tag {
   flex-shrink: 0;
-  width: 3.4rem;
+  width: 3.2rem;
+  height: 2.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 0.72rem;
-  letter-spacing: 0.04em;
-  padding: 0.3rem 0;
-  border-radius: 6px;
+  letter-spacing: 0.03em;
+  border-radius: 8px;
   color: white;
   background: var(--ink-soft);
 }
@@ -496,24 +524,52 @@ tr.is-drafted .player-name { text-decoration: line-through; text-decoration-colo
 .slot-tag.tag-FLEX { background: #a4763a; }
 .slot-tag.tag-K { background: #6b7280; }
 .slot-tag.tag-DEF { background: #3d3a2e; }
-.slot-tag.tag-BN { background: var(--line); color: var(--ink-soft); }
+.slot-tag.tag-BN { background: transparent; color: var(--ink-soft); border: 1px solid var(--line); width: 2.6rem; height: 2rem; font-size: 0.65rem; }
 
 .slot-body { flex: 1; min-width: 0; }
 
-.slot-empty { color: var(--ink-soft); font-style: italic; font-size: 0.9rem; }
+.slot-empty {
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
 
-.slot-player-name { font-weight: 600; }
+.slot-empty i { color: var(--line); }
 
-.slot-player-meta { font-size: 0.8rem; color: var(--ink-soft); margin-top: 0.1rem; }
+.slot-player-name { font-weight: 700; font-size: 1rem; }
+
+.slot-player-meta { font-size: 0.78rem; color: var(--ink-soft); margin-top: 0.15rem; }
 
 .slot-stat {
   font-family: var(--font-mono);
-  font-size: 0.85rem;
-  color: var(--ink-soft);
   flex-shrink: 0;
-  text-align: right;
-  min-width: 3.5rem;
+  text-align: center;
+  background: var(--field-dark);
+  color: var(--amber);
+  border-radius: 8px;
+  padding: 0.4rem 0.7rem;
+  min-width: 3.6rem;
 }
+
+.slot-stat .stat-value { font-size: 1rem; font-weight: 600; display: block; line-height: 1.1; }
+.slot-stat .stat-label { font-size: 0.6rem; color: var(--chalk-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+
+.bench-list { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.bench-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid var(--chalk-dim);
+  background: white;
+  font-size: 0.9rem;
+}
+
+.bench-row .slot-player-meta { margin-top: 0; }
 
 .roster-summary-bar {
   display: flex;

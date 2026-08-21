@@ -29,11 +29,11 @@
 
 <div class="app">
   <div class="panel">
-    <div class="roster-heading">Starters</div>
-    <div id="startersList"></div>
+    <div class="roster-heading"><i class="fas fa-star"></i>Starters</div>
+    <div class="starters-grid" id="startersList"></div>
 
-    <div class="roster-heading">Bench</div>
-    <div id="benchList"></div>
+    <div class="roster-heading"><i class="fas fa-users"></i>Bench</div>
+    <div class="bench-list" id="benchList"></div>
 
     <div class="footer-note">
       <span><i class="fas fa-circle-check"></i> Starters auto-fill with your best drafted player at each slot, ranked by 2026 projection</span>
@@ -68,10 +68,11 @@ function qualityScore(p) {
 
 function renderSlot(label, player) {
   if (!player) {
+    const needs = label === 'FLEX' ? 'WR/RB/TE' : label;
     return `
-      <div class="roster-slot">
+      <div class="roster-slot is-empty">
         <div class="slot-tag tag-${label}">${label}</div>
-        <div class="slot-body"><span class="slot-empty">Empty — draft a ${label === 'FLEX' ? 'WR/RB/TE' : label} to fill this slot</span></div>
+        <div class="slot-body"><span class="slot-empty"><i class="fas fa-circle-plus"></i>Draft a ${needs} to fill this slot</span></div>
       </div>
     `;
   }
@@ -83,7 +84,22 @@ function renderSlot(label, player) {
         <div class="slot-player-name">${player.player}</div>
         <div class="slot-player-meta">${player.pos} &middot; ${player.team}${SLEEPER_NAMES.has(player.player) ? ' &middot; <i class="fas fa-star sleeper-flag"></i> Sleeper' : ''}</div>
       </div>
-      <div class="slot-stat">${proj}<br><span style="font-size:0.7rem;">2026 proj</span></div>
+      <div class="slot-stat"><span class="stat-value">${proj}</span><span class="stat-label">2026 proj</span></div>
+    </div>
+  `;
+}
+
+function renderBenchRow(player) {
+  const proj = player.projPts > 0 ? player.projPts.toFixed(1) : '—';
+  return `
+    <div class="bench-row">
+      <div class="slot-tag tag-BN">BN</div>
+      <span class="pos-badge pos-${player.pos}" style="width:1.6rem;height:1.6rem;font-size:0.6rem;">${player.pos}</span>
+      <div class="slot-body">
+        <span class="slot-player-name" style="font-size:0.9rem;">${player.player}</span>
+        <span class="slot-player-meta">${player.team}${SLEEPER_NAMES.has(player.player) ? ' &middot; <i class="fas fa-star sleeper-flag"></i>' : ''}</span>
+      </div>
+      <div class="slot-stat" style="background:transparent;color:var(--ink-soft);"><span class="stat-value" style="color:var(--ink);">${proj}</span><span class="stat-label">proj</span></div>
     </div>
   `;
 }
@@ -110,9 +126,9 @@ function render() {
   startersList.innerHTML = filledSlots.map(s => renderSlot(s.label, s.player)).join('');
 
   if (bench.length === 0) {
-    benchList.innerHTML = `<div class="roster-slot"><div class="slot-tag tag-BN">BN</div><div class="slot-body"><span class="slot-empty">No bench players yet</span></div></div>`;
+    benchList.innerHTML = `<div class="roster-slot is-empty"><div class="slot-tag tag-BN">BN</div><div class="slot-body"><span class="slot-empty"><i class="fas fa-circle-info"></i>No bench players yet</span></div></div>`;
   } else {
-    benchList.innerHTML = bench.map(p => renderSlot('BN', p)).join('');
+    benchList.innerHTML = bench.map(p => renderBenchRow(p)).join('');
   }
 
   const filledCount = filledSlots.filter(s => s.player).length;
