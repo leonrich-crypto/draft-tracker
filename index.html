@@ -59,8 +59,10 @@
             <th>Player</th>
             <th>Team</th>
             <th class="num">Rank</th>
-            <th class="num">Total Pts</th>
-            <th class="num">PPG</th>
+            <th class="num">2025 Pts</th>
+            <th class="num">2025 PPG</th>
+            <th class="num">2026 Proj</th>
+            <th class="num">2026 PPG</th>
             <th>Notes</th>
           </tr>
         </thead>
@@ -69,7 +71,7 @@
     </div>
 
     <div class="footer-note">
-      <span><i class="fas fa-circle-check"></i> Pts/PPG are real 2025 season totals (PPR) &middot; 0.0 = no 2025 NFL action (rookie, injury, etc.)</span>
+      <span><i class="fas fa-circle-check"></i> 2025 = actual season totals (PPR) &middot; 2026 = CBS Sports consensus projections &middot; &mdash; = not available</span>
       <span id="lastUpdated"></span>
     </div>
   </div>
@@ -121,8 +123,10 @@ function render() {
           <td><span class="player-name">${p.player}</span></td>
           <td>${p.team}</td>
           <td class="num">${p.rank}</td>
-          <td class="num">${p.pts.toFixed(1)}</td>
-          <td class="num">${p.ppg.toFixed(1)}</td>
+          <td class="num">${p.pts > 0 ? p.pts.toFixed(1) : '—'}</td>
+          <td class="num">${p.ppg > 0 ? p.ppg.toFixed(1) : '—'}</td>
+          <td class="num">${p.projPts > 0 ? p.projPts.toFixed(1) : '—'}</td>
+          <td class="num">${p.projPpg > 0 ? p.projPpg.toFixed(1) : '—'}</td>
           <td>${note}</td>
         </tr>
       `;
