@@ -162,6 +162,7 @@ function renderSleeperPanel() {
   const cfg = getSleeperConfig();
 
   if (cfg && cfg.draftId) {
+    const needsUsername = !cfg.userId;
     sleeperPanel.innerHTML = `
       <div class="toolbar" style="justify-content:space-between; margin-bottom:0.6rem;">
         <div>
@@ -173,7 +174,14 @@ function renderSleeperPanel() {
           <button class="btn btn-quiet" id="disconnectBtn"><i class="fas fa-link-slash"></i> Disconnect</button>
         </div>
       </div>
-      <div class="footer-note" style="margin-top:0;">
+      ${needsUsername ? `
+        <div class="toolbar" style="background:var(--amber-soft); border-radius:8px; padding:0.6rem 0.8rem;">
+          <span style="font-size:0.85rem; flex:1;"><i class="fas fa-circle-info"></i> The whole board is syncing, but I don't know which picks are yours yet. Add your username so My Team fills in correctly:</span>
+          <input type="text" id="tagUsername" placeholder="Your Sleeper username" style="min-width:160px;" />
+          <button class="btn" id="tagUsernameBtn">Set</button>
+        </div>
+      ` : ''}
+      <div class="footer-note" style="margin-top:0.6rem;">
         <span>Last synced ${timeAgo(cfg.lastSyncedAt)} &middot; ${cfg.matchedPicks || 0}/${cfg.totalPicks || 0} picks matched to players &middot; polling every 15s</span>
       </div>
     `;
@@ -190,18 +198,40 @@ function renderSleeperPanel() {
         renderSleeperPanel();
       }
     });
+    if (needsUsername) {
+      document.getElementById('tagUsernameBtn').addEventListener('click', async () => {
+        const uname = document.getElementById('tagUsername').value.trim();
+        if (!uname) return;
+        try {
+          const user = await sleeperLookupUser(uname);
+          const c = getSleeperConfig();
+          c.userId = user.user_id;
+          setSleeperConfig(c);
+          await sleeperSyncOnce();
+          renderSleeperPanel();
+        } catch (e) {
+          alert(e.message || 'Could not find that username.');
+        }
+      });
+    }
     return;
   }
 
   sleeperPanel.innerHTML = `
     <div style="margin-bottom:0.8rem;">
       <strong><i class="fab fa-hire-a-helper" style="color:var(--field);"></i> Connect your Sleeper league</strong>
-      <div style="font-size:0.85rem; color:var(--ink-soft); margin-top:0.2rem;">Enter your Sleeper username to pull in your live draft — picks sync automatically as they happen.</div>
+      <div style="font-size:0.85rem; color:var(--ink-soft); margin-top:0.2rem;">Paste your league URL, or search by username — picks sync automatically as they happen.</div>
     </div>
+    <div class="toolbar">
+      <input type="text" id="sleeperLeagueUrl" placeholder="Paste your Sleeper league URL or ID" style="flex:1; min-width:220px;" />
+      <button class="btn" id="connectByUrlBtn"><i class="fas fa-link"></i> Connect this league</button>
+    </div>
+    <div style="font-size:0.8rem; color:var(--ink-soft); margin:0.6rem 0 0.3rem;">— or —</div>
     <div class="toolbar">
       <input type="text" id="sleeperUsername" placeholder="Your Sleeper username" style="flex:1; min-width:180px;" />
       <button class="btn" id="findLeaguesBtn"><i class="fas fa-magnifying-glass"></i> Find leagues</button>
     </div>
+    <div style="font-size:0.78rem; color:var(--ink-soft); margin-top:0.3rem;">Searching by username also tags which picks are yours, so My Team fills in correctly. The URL option marks the whole board but can't tell your picks apart from your opponents' — add your username afterward if you want that.</div>
     <div id="sleeperLeagueResults"></div>
     <div id="sleeperError" style="color:var(--flag); font-size:0.85rem; margin-top:0.4rem;"></div>
   `;
@@ -210,6 +240,54 @@ function renderSleeperPanel() {
   document.getElementById('sleeperUsername').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') findLeagues();
   });
+  document.getElementById('connectByUrlBtn').addEventListener('click', connectByUrl);
+  document.getElementById('sleeperLeagueUrl').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') connectByUrl();
+  });
+}
+
+function extractLeagueId(input) {
+  const trimmed = input.trim();
+  const match = trimmed.match(/leagues\/(\d+)/);
+  if (match) return match[1];
+  if (/^\d{6,}$/.test(trimmed)) return trimmed;
+  return null;
+}
+
+async function connectByUrl() {
+  const input = document.getElementById('sleeperLeagueUrl').value;
+  const errorBox = document.getElementById('sleeperError');
+  errorBox.textContent = '';
+  const leagueId = extractLeagueId(input);
+  if (!leagueId) {
+    errorBox.textContent = 'Could not find a league ID in that — paste the full league URL or just the numeric ID.';
+    return;
+  }
+
+  const btn = document.getElementById('connectByUrlBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
+
+  try {
+    const res = await fetch(`https://api.sleeper.app/v1/league/${leagueId}`);
+    if (!res.ok) throw new Error('Could not find that league on Sleeper.');
+    const league = await res.json();
+    if (!league.draft_id) throw new Error('This league has no draft set up yet on Sleeper.');
+    setSleeperConfig({
+      leagueId: league.league_id,
+      draftId: league.draft_id,
+      leagueName: league.name,
+      status: league.status,
+      userId: null, // unknown until they also search by username
+    });
+    startSleeperPolling();
+    renderSleeperPanel();
+  } catch (e) {
+    errorBox.textContent = e.message || 'Something went wrong connecting that league.';
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fas fa-link"></i> Connect this league';
 }
 
 async function findLeagues() {
