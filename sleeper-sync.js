@@ -110,6 +110,69 @@ function onPicksByRosterChange(cb) {
   window.addEventListener('storage', (e) => { if (e.key === PICKS_BY_ROSTER_KEY) cb(); });
 }
 
+async function sleeperFetchLeague(leagueId) {
+  const res = await fetch(`https://api.sleeper.app/v1/league/${leagueId}`);
+  if (!res.ok) throw new Error('Could not find that league on Sleeper.');
+  return res.json();
+}
+
+async function sleeperFetchDraftInfo(draftId) {
+  const res = await fetch(`https://api.sleeper.app/v1/draft/${draftId}`);
+  if (!res.ok) throw new Error('Could not find that draft on Sleeper.');
+  return res.json();
+}
+
+function parseSleeperInput(input) {
+  const trimmed = input.trim();
+  const draftMatch = trimmed.match(/draft\/(?:nfl\/)?(\d+)/);
+  if (draftMatch) return { type: 'draft', id: draftMatch[1] };
+  const leagueMatch = trimmed.match(/leagues\/(\d+)/);
+  if (leagueMatch) return { type: 'league', id: leagueMatch[1] };
+  if (/^\d{6,}$/.test(trimmed)) return { type: 'unknown', id: trimmed };
+  return null;
+}
+
+// Resolves a league URL, draft URL, or bare numeric ID down to
+// {leagueId, draftId, leagueName, status} regardless of which kind it was.
+async function resolveSleeperConnection(input) {
+  const parsed = parseSleeperInput(input);
+  if (!parsed) {
+    throw new Error('Could not find a league or draft ID in that — paste a Sleeper league or draft URL, or just the numeric ID.');
+  }
+
+  if (parsed.type === 'draft') {
+    const draft = await sleeperFetchDraftInfo(parsed.id);
+    return {
+      leagueId: draft.league_id || null,
+      draftId: draft.draft_id,
+      leagueName: (draft.metadata && draft.metadata.name) || 'Sleeper Draft',
+      status: draft.status,
+    };
+  }
+
+  if (parsed.type === 'league') {
+    const league = await sleeperFetchLeague(parsed.id);
+    if (!league.draft_id) throw new Error('This league has no draft set up yet on Sleeper.');
+    return { leagueId: league.league_id, draftId: league.draft_id, leagueName: league.name, status: league.status };
+  }
+
+  // Bare numeric ID — could be either a league or a draft. Try league first.
+  try {
+    const league = await sleeperFetchLeague(parsed.id);
+    if (league && league.draft_id) {
+      return { leagueId: league.league_id, draftId: league.draft_id, leagueName: league.name, status: league.status };
+    }
+  } catch (e) { /* fall through to draft lookup */ }
+
+  const draft = await sleeperFetchDraftInfo(parsed.id);
+  return {
+    leagueId: draft.league_id || null,
+    draftId: draft.draft_id,
+    leagueName: (draft.metadata && draft.metadata.name) || 'Sleeper Draft',
+    status: draft.status,
+  };
+}
+
 // ---------- Name matching ----------
 
 function sleeperNormalize(name) {

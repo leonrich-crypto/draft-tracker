@@ -227,7 +227,7 @@ function renderSleeperPanel() {
       <div style="font-size:0.85rem; color:var(--ink-soft); margin-top:0.2rem;">Paste your league URL, or search by username — picks sync automatically as they happen.</div>
     </div>
     <div class="toolbar">
-      <input type="text" id="sleeperLeagueUrl" placeholder="Paste your Sleeper league URL or ID" style="flex:1; min-width:220px;" />
+      <input type="text" id="sleeperLeagueUrl" placeholder="Paste a Sleeper league or draft URL/ID" style="flex:1; min-width:220px;" />
       <button class="btn" id="connectByUrlBtn"><i class="fas fa-link"></i> Connect this league</button>
     </div>
     <div style="font-size:0.8rem; color:var(--ink-soft); margin:0.6rem 0 0.3rem;">— or —</div>
@@ -251,45 +251,38 @@ function renderSleeperPanel() {
 }
 
 function extractLeagueId(input) {
-  const trimmed = input.trim();
-  const match = trimmed.match(/leagues\/(\d+)/);
-  if (match) return match[1];
-  if (/^\d{6,}$/.test(trimmed)) return trimmed;
-  return null;
+  // Kept for the placeholder/validation hint only — actual parsing now
+  // happens in resolveSleeperConnection, which also understands draft URLs.
+  return parseSleeperInput(input);
 }
 
 async function connectByUrl() {
   const input = document.getElementById('sleeperLeagueUrl').value;
   const errorBox = document.getElementById('sleeperError');
   errorBox.textContent = '';
-  const leagueId = extractLeagueId(input);
-  if (!leagueId) {
-    errorBox.textContent = 'Could not find a league ID in that — paste the full league URL or just the numeric ID.';
-    return;
-  }
 
   const btn = document.getElementById('connectByUrlBtn');
   btn.disabled = true;
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
 
   try {
-    const res = await fetch(`https://api.sleeper.app/v1/league/${leagueId}`);
-    if (!res.ok) throw new Error('Could not find that league on Sleeper.');
-    const league = await res.json();
-    if (!league.draft_id) throw new Error('This league has no draft set up yet on Sleeper.');
-    const teams = await sleeperBuildTeamsMap(league.league_id).catch(() => ({}));
+    const resolved = await resolveSleeperConnection(input);
+    let teams = {};
+    if (resolved.leagueId) {
+      teams = await sleeperBuildTeamsMap(resolved.leagueId).catch(() => ({}));
+    }
     setSleeperConfig({
-      leagueId: league.league_id,
-      draftId: league.draft_id,
-      leagueName: league.name,
-      status: league.status,
+      leagueId: resolved.leagueId,
+      draftId: resolved.draftId,
+      leagueName: resolved.leagueName,
+      status: resolved.status,
       userId: null, // unknown until they also search by username
       teams,
     });
     startSleeperPolling();
     renderSleeperPanel();
   } catch (e) {
-    errorBox.textContent = e.message || 'Something went wrong connecting that league.';
+    errorBox.textContent = e.message || 'Something went wrong connecting that.';
   }
 
   btn.disabled = false;
