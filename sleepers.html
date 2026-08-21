@@ -20,7 +20,7 @@
         <a href="sleepers.html" class="active"><i class="fas fa-star"></i>Sleepers</a>
       </nav>
     </div>
-    <div class="page-title">Late-round scouting notes</div>
+    <div class="page-title">Late-round scouting notes, grouped by position</div>
     <div style="margin-top:0.6rem;font-size:0.78rem;color:var(--chalk-dim);font-family:var(--font-mono);"><i class="fas fa-satellite-dish"></i> Pulled from live training-camp coverage &middot; snapshot taken Aug 20, 2026</div>
   </div>
   <div class="scoreboard-ticks"></div>
@@ -28,28 +28,12 @@
 
 <div class="app">
   <div class="panel">
-    <div class="toolbar">
-      <input type="text" id="searchInput" placeholder="Search player, team, category, or note" style="flex:1; min-width:200px;" />
-      <select id="filterPos">
-        <option value="all">All positions</option>
-        <option value="QB">QB</option>
-        <option value="RB">RB</option>
-        <option value="WR">WR</option>
-        <option value="TE">TE</option>
-      </select>
-      <select id="filterStatus">
-        <option value="all">All sleepers</option>
-        <option value="drafted">Drafted only</option>
-        <option value="undrafted">Available only</option>
-      </select>
-    </div>
-
+    <div class="pos-tabs" id="posTabs"></div>
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
             <th style="width:2.5rem;"></th>
-            <th>Pos</th>
             <th>Player</th>
             <th>Team</th>
             <th>Category</th>
@@ -60,9 +44,8 @@
         <tbody id="tableBody"></tbody>
       </table>
     </div>
-
     <div class="footer-note">
-      <span id="sleeperSummary"></span>
+      <span id="posSummary"></span>
       <span><i class="fas fa-circle-check"></i> Synced with the main board</span>
     </div>
   </div>
@@ -71,52 +54,54 @@
 <script src="data.js"></script>
 <script src="store.js"></script>
 <script>
+const posTabs = document.getElementById('posTabs');
 const tbody = document.getElementById('tableBody');
-const searchInput = document.getElementById('searchInput');
-const filterPos = document.getElementById('filterPos');
-const filterStatus = document.getElementById('filterStatus');
-const sleeperSummary = document.getElementById('sleeperSummary');
+const posSummary = document.getElementById('posSummary');
+
+const SLEEPER_POSITIONS = POSITION_ORDER.filter(pos => SLEEPERS.some(s => s.pos === pos));
+let activePos = SLEEPER_POSITIONS[0];
+
+function renderTabs() {
+  const drafted = getDraftedSet();
+  posTabs.innerHTML = SLEEPER_POSITIONS.map(pos => {
+    const group = SLEEPERS.filter(s => s.pos === pos);
+    const left = group.filter(s => !drafted.has(s.player)).length;
+    return `<button class="pos-tab ${pos === activePos ? 'active' : ''}" data-pos="${pos}">
+      ${pos} <span class="count">${left}/${group.length} left</span>
+    </button>`;
+  }).join('');
+
+  posTabs.querySelectorAll('.pos-tab').forEach(btn => {
+    btn.addEventListener('click', () => { activePos = btn.dataset.pos; render(); });
+  });
+}
 
 function render() {
+  renderTabs();
   const drafted = getDraftedSet();
-  const search = searchInput.value.toLowerCase().trim();
-  const pos = filterPos.value;
-  const status = filterStatus.value;
+  const group = SLEEPERS.filter(s => s.pos === activePos);
 
-  let filtered = SLEEPERS.filter(s => {
-    const isDrafted = drafted.has(s.player);
-    if (status === 'drafted' && !isDrafted) return false;
-    if (status === 'undrafted' && isDrafted) return false;
-    if (pos !== 'all' && s.pos !== pos) return false;
-    if (search) {
-      const hay = (s.player + ' ' + s.team + ' ' + s.pos + ' ' + s.category + ' ' + s.upside + ' ' + s.risk).toLowerCase();
-      if (!hay.includes(search)) return false;
-    }
-    return true;
-  });
-
-  if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><i class="fas fa-clipboard-question"></i>No sleepers match those filters.</div></td></tr>`;
+  if (group.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fas fa-clipboard-question"></i>No sleepers tracked at this position.</div></td></tr>`;
   } else {
-    tbody.innerHTML = filtered.map(s => {
+    tbody.innerHTML = group.map(s => {
       const isDrafted = drafted.has(s.player);
       return `
         <tr class="${isDrafted ? 'is-drafted' : ''}">
           <td><input type="checkbox" class="draft-check" data-name="${s.player.replace(/"/g,'&quot;')}" ${isDrafted ? 'checked' : ''} /></td>
-          <td><span class="pos-badge pos-${s.pos}">${s.pos}</span></td>
           <td><span class="player-name"><i class="fas fa-star sleeper-flag"></i> ${s.player}</span></td>
           <td>${s.team}</td>
           <td><span class="chip chip-amber">${s.category}</span></td>
-          <td style="max-width:260px;">${s.upside}</td>
+          <td style="max-width:280px;">${s.upside}</td>
           <td style="max-width:220px;color:var(--flag);">${s.risk}</td>
         </tr>
       `;
     }).join('');
   }
 
-  const total = SLEEPERS.length;
-  const draftedTotal = SLEEPERS.filter(s => drafted.has(s.player)).length;
-  sleeperSummary.textContent = `${total} sleepers tracked · ${draftedTotal} drafted · ${total - draftedTotal} still available`;
+  const total = group.length;
+  const draftedInGroup = group.filter(s => drafted.has(s.player)).length;
+  posSummary.textContent = `${activePos} sleepers: ${draftedInGroup} drafted, ${total - draftedInGroup} still available`;
 
   tbody.querySelectorAll('.draft-check').forEach(cb => {
     cb.addEventListener('change', function () {
@@ -125,9 +110,6 @@ function render() {
   });
 }
 
-searchInput.addEventListener('input', render);
-filterPos.addEventListener('change', render);
-filterStatus.addEventListener('change', render);
 onDraftStoreChange(render);
 render();
 </script>
