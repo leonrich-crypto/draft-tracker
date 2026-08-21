@@ -28,6 +28,8 @@
 </header>
 
 <div class="app">
+  <div class="panel" id="sleeperPanel" style="margin-bottom:1.2rem;"></div>
+
   <div class="panel">
     <div class="roster-heading"><i class="fas fa-star"></i>Starters</div>
     <div class="starters-grid" id="startersList"></div>
@@ -44,6 +46,7 @@
 
 <script src="data.js"></script>
 <script src="store.js"></script>
+<script src="sleeper-sync.js"></script>
 <script>
 // Starting lineup shape. FLEX accepts WR/RB/TE.
 const STARTING_SLOTS = [
@@ -105,7 +108,10 @@ function renderBenchRow(player) {
 }
 
 function render() {
-  const drafted = getDraftedSet();
+  const cfg = getSleeperConfig();
+  // If a Sleeper league is connected, "my team" = picks Sleeper attributes to me.
+  // Otherwise fall back to the original manual-checkbox behavior (anyone drafted = mine).
+  const drafted = (cfg && cfg.draftId) ? getMyPicksSet() : getDraftedSet();
   const startersList = document.getElementById('startersList');
   const benchList = document.getElementById('benchList');
   const summaryBar = document.getElementById('summaryBar');
@@ -139,7 +145,144 @@ function render() {
   `;
 }
 
+// ---------- Sleeper connect panel ----------
+
+const sleeperPanel = document.getElementById('sleeperPanel');
+let foundLeagues = [];
+
+function timeAgo(ts) {
+  if (!ts) return 'never';
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return s + 's ago';
+  if (s < 3600) return Math.floor(s / 60) + 'm ago';
+  return Math.floor(s / 3600) + 'h ago';
+}
+
+function renderSleeperPanel() {
+  const cfg = getSleeperConfig();
+
+  if (cfg && cfg.draftId) {
+    sleeperPanel.innerHTML = `
+      <div class="toolbar" style="justify-content:space-between; margin-bottom:0.6rem;">
+        <div>
+          <strong><i class="fas fa-satellite-dish" style="color:var(--field);"></i> Connected: ${cfg.leagueName || 'Sleeper League'}</strong>
+          <span class="chip chip-ok" style="margin-left:0.5rem;">${cfg.status || 'synced'}</span>
+        </div>
+        <div style="display:flex; gap:0.5rem;">
+          <button class="btn" id="syncNowBtn"><i class="fas fa-rotate"></i> Sync now</button>
+          <button class="btn btn-quiet" id="disconnectBtn"><i class="fas fa-link-slash"></i> Disconnect</button>
+        </div>
+      </div>
+      <div class="footer-note" style="margin-top:0;">
+        <span>Last synced ${timeAgo(cfg.lastSyncedAt)} &middot; ${cfg.matchedPicks || 0}/${cfg.totalPicks || 0} picks matched to players &middot; polling every 15s</span>
+      </div>
+    `;
+    document.getElementById('syncNowBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('syncNowBtn');
+      btn.disabled = true;
+      await sleeperSyncOnce();
+      renderSleeperPanel();
+    });
+    document.getElementById('disconnectBtn').addEventListener('click', () => {
+      if (confirm('Disconnect this Sleeper league? Your board stays as-is, but it will stop auto-updating.')) {
+        stopSleeperPolling();
+        clearSleeperConfig();
+        renderSleeperPanel();
+      }
+    });
+    return;
+  }
+
+  sleeperPanel.innerHTML = `
+    <div style="margin-bottom:0.8rem;">
+      <strong><i class="fab fa-hire-a-helper" style="color:var(--field);"></i> Connect your Sleeper league</strong>
+      <div style="font-size:0.85rem; color:var(--ink-soft); margin-top:0.2rem;">Enter your Sleeper username to pull in your live draft — picks sync automatically as they happen.</div>
+    </div>
+    <div class="toolbar">
+      <input type="text" id="sleeperUsername" placeholder="Your Sleeper username" style="flex:1; min-width:180px;" />
+      <button class="btn" id="findLeaguesBtn"><i class="fas fa-magnifying-glass"></i> Find leagues</button>
+    </div>
+    <div id="sleeperLeagueResults"></div>
+    <div id="sleeperError" style="color:var(--flag); font-size:0.85rem; margin-top:0.4rem;"></div>
+  `;
+
+  document.getElementById('findLeaguesBtn').addEventListener('click', findLeagues);
+  document.getElementById('sleeperUsername').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') findLeagues();
+  });
+}
+
+async function findLeagues() {
+  const username = document.getElementById('sleeperUsername').value.trim();
+  const errorBox = document.getElementById('sleeperError');
+  const resultsBox = document.getElementById('sleeperLeagueResults');
+  errorBox.textContent = '';
+  resultsBox.innerHTML = '';
+  if (!username) { errorBox.textContent = 'Enter a username first.'; return; }
+
+  const btn = document.getElementById('findLeaguesBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching...';
+
+  try {
+    const user = await sleeperLookupUser(username);
+    const season = new Date().getMonth() >= 1 ? new Date().getFullYear() : new Date().getFullYear() - 1;
+    const leagues = await sleeperFetchLeagues(user.user_id, season);
+
+    if (!leagues || leagues.length === 0) {
+      errorBox.textContent = `No ${season} NFL leagues found for "${username}".`;
+    } else {
+      foundLeagues = leagues.map(l => ({ ...l, _userId: user.user_id }));
+      resultsBox.innerHTML = `
+        <div class="table-wrap" style="margin-top:0.8rem;">
+          <table>
+            <thead><tr><th>League</th><th>Status</th><th>Teams</th><th style="width:1%;"></th></tr></thead>
+            <tbody>
+              ${foundLeagues.map((l, i) => `
+                <tr>
+                  <td><span class="player-name">${l.name}</span></td>
+                  <td><span class="chip ${l.status === 'complete' ? 'chip-ok' : l.status === 'drafting' ? 'chip-amber' : 'chip-flag'}">${l.status}</span></td>
+                  <td class="num">${l.total_rosters}</td>
+                  <td><button class="btn" data-idx="${i}">Connect</button></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+      resultsBox.querySelectorAll('button[data-idx]').forEach(b => {
+        b.addEventListener('click', () => connectLeague(foundLeagues[parseInt(b.dataset.idx, 10)]));
+      });
+    }
+  } catch (e) {
+    errorBox.textContent = e.message || 'Something went wrong looking that up.';
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fas fa-magnifying-glass"></i> Find leagues';
+}
+
+function connectLeague(league) {
+  if (!league.draft_id) {
+    document.getElementById('sleeperError').textContent = 'This league has no draft set up yet on Sleeper.';
+    return;
+  }
+  setSleeperConfig({
+    leagueId: league.league_id,
+    draftId: league.draft_id,
+    leagueName: league.name,
+    status: league.status,
+    userId: league._userId,
+  });
+  startSleeperPolling();
+  renderSleeperPanel();
+}
+
+onSleeperSyncTick(() => { renderSleeperPanel(); render(); });
+onSleeperConfigChange(renderSleeperPanel);
+onMyPicksChange(render);
 onDraftStoreChange(render);
+renderSleeperPanel();
 render();
 </script>
 </body>
