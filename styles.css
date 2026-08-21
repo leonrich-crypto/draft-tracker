@@ -176,8 +176,9 @@ a { color: inherit; }
 .panel {
   background: white;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(23, 35, 26, 0.05);
+  padding: 1.7rem;
 }
 
 .toolbar {
@@ -450,27 +451,27 @@ tr.is-drafted .player-name { text-decoration: line-through; text-decoration-colo
 
 .roster-heading {
   font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 0.85rem;
+  font-weight: 700;
+  font-size: 1rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--ink-soft);
-  margin: 1.6rem 0 0.8rem;
-  padding-top: 1.2rem;
+  letter-spacing: 0.06em;
+  color: var(--field);
+  margin: 2rem 0 1rem;
+  padding-top: 1.4rem;
   border-top: 1px dashed var(--line);
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.roster-heading i { color: var(--amber); }
+.roster-heading i { color: var(--amber); font-size: 1.1rem; }
 
 .roster-heading:first-child { margin-top: 0; padding-top: 0; border-top: none; }
 
 .starters-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.7rem;
+  gap: 0.9rem;
 }
 
 @media (max-width: 720px) {
@@ -480,100 +481,121 @@ tr.is-drafted .player-name { text-decoration: line-through; text-decoration-colo
 .roster-slot {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
-  padding: 0.85rem 1rem;
-  border-radius: 10px;
-  border: 1px solid var(--line);
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+  border-radius: 16px;
+  border: 1px solid var(--chalk-dim);
   background: white;
-  transition: 0.15s;
+  box-shadow: 0 1px 3px rgba(23, 35, 26, 0.06);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .roster-slot.is-filled {
-  border-color: var(--field);
-  border-left-width: 4px;
-  background: linear-gradient(90deg, var(--ok-soft) 0%, white 18%);
-  box-shadow: 0 2px 6px rgba(28, 74, 48, 0.08);
+  border-color: transparent;
+  background: linear-gradient(135deg, #ffffff 0%, var(--ok-soft) 140%);
+  box-shadow: 0 4px 14px rgba(28, 74, 48, 0.12);
+}
+
+.roster-slot.is-filled:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 22px rgba(28, 74, 48, 0.18);
 }
 
 .roster-slot.is-empty {
-  border-style: dashed;
-  background: var(--chalk);
+  border: 2px dashed var(--line);
+  background: repeating-linear-gradient(
+    135deg, var(--chalk) 0, var(--chalk) 10px, var(--paper) 10px, var(--paper) 20px
+  );
+  box-shadow: none;
 }
 
 .slot-tag {
   flex-shrink: 0;
   width: 3.2rem;
-  height: 2.6rem;
+  height: 3.2rem;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 0.72rem;
-  letter-spacing: 0.03em;
-  border-radius: 8px;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  border-radius: 50%;
   color: white;
-  background: var(--ink-soft);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.25);
 }
 
-.slot-tag.tag-QB { background: #b8463b; }
-.slot-tag.tag-RB { background: #2c6b45; }
-.slot-tag.tag-WR { background: #2b6f82; }
-.slot-tag.tag-TE { background: #6d5490; }
-.slot-tag.tag-FLEX { background: #a4763a; }
-.slot-tag.tag-K { background: #6b7280; }
-.slot-tag.tag-DEF { background: #3d3a2e; }
-.slot-tag.tag-BN { background: transparent; color: var(--ink-soft); border: 1px solid var(--line); width: 2.6rem; height: 2rem; font-size: 0.65rem; }
+.slot-tag.tag-QB { background: linear-gradient(155deg, #d3554a, #a2352b); }
+.slot-tag.tag-RB { background: linear-gradient(155deg, #3a8a58, #235a37); }
+.slot-tag.tag-WR { background: linear-gradient(155deg, #3690a8, #1f5566); }
+.slot-tag.tag-TE { background: linear-gradient(155deg, #8a6bb5, #5c4179); }
+.slot-tag.tag-FLEX { background: linear-gradient(155deg, #dcaa53, #a4763a); }
+.slot-tag.tag-K { background: linear-gradient(155deg, #8b93a1, #5f6773); }
+.slot-tag.tag-DEF { background: linear-gradient(155deg, #5a5644, #34321f); }
+.slot-tag.tag-BN {
+  background: transparent;
+  color: var(--ink-soft);
+  border: 2px solid var(--line);
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 0.65rem;
+  box-shadow: none;
+}
 
 .slot-body { flex: 1; min-width: 0; }
 
 .slot-empty {
   color: var(--ink-soft);
-  font-size: 0.85rem;
+  font-size: 0.88rem;
+  font-weight: 500;
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.5rem;
 }
 
-.slot-empty i { color: var(--line); }
+.slot-empty i { color: var(--amber); font-size: 1.1rem; }
 
-.slot-player-name { font-weight: 700; font-size: 1rem; }
+.slot-player-name { font-weight: 700; font-size: 1.05rem; color: var(--ink); }
 
-.slot-player-meta { font-size: 0.78rem; color: var(--ink-soft); margin-top: 0.15rem; }
+.slot-player-meta { font-size: 0.8rem; color: var(--ink-soft); margin-top: 0.15rem; }
 
 .slot-stat {
   font-family: var(--font-mono);
   flex-shrink: 0;
   text-align: center;
-  background: var(--field-dark);
+  background: linear-gradient(155deg, var(--field), var(--field-dark));
   color: var(--amber);
-  border-radius: 8px;
-  padding: 0.4rem 0.7rem;
-  min-width: 3.6rem;
+  border-radius: 12px;
+  padding: 0.5rem 0.8rem;
+  min-width: 3.8rem;
+  box-shadow: 0 2px 6px rgba(18,40,28,0.25);
 }
 
-.slot-stat .stat-value { font-size: 1rem; font-weight: 600; display: block; line-height: 1.1; }
-.slot-stat .stat-label { font-size: 0.6rem; color: var(--chalk-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+.slot-stat .stat-value { font-size: 1.05rem; font-weight: 700; display: block; line-height: 1.15; }
+.slot-stat .stat-label { font-size: 0.58rem; color: var(--chalk-dim); text-transform: uppercase; letter-spacing: 0.04em; }
 
-.bench-list { display: flex; flex-direction: column; gap: 0.4rem; }
+.bench-list { display: flex; flex-direction: column; gap: 0.5rem; }
 
 .bench-row {
   display: flex;
   align-items: center;
-  gap: 0.7rem;
-  padding: 0.55rem 0.85rem;
-  border-radius: 8px;
+  gap: 0.8rem;
+  padding: 0.65rem 1rem;
+  border-radius: 12px;
   border: 1px solid var(--chalk-dim);
   background: white;
   font-size: 0.9rem;
+  transition: background 0.15s ease;
 }
+
+.bench-row:hover { background: var(--chalk); }
 
 .bench-row .slot-player-meta { margin-top: 0; }
 
 .roster-summary-bar {
   display: flex;
-  gap: 0.6rem;
+  gap: 0.7rem;
   flex-wrap: wrap;
   margin-top: 1.2rem;
 }
